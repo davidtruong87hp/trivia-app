@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { StartQuizDto } from 'src/dto/start-quiz.dto';
 
@@ -14,5 +22,10 @@ export class QuizController {
   @Post('start')
   startQuiz(@Body() dto: StartQuizDto) {
     return this.quizService.startQuiz(dto);
+  }
+
+  @Delete('session/:sessionId')
+  deleteSession(@Param('sessionId', ParseUUIDPipe) sessionId: string) {
+    return this.quizService.deleteSession(sessionId);
   }
 }

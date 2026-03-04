@@ -25,3 +25,12 @@ export interface ClientQuestion {
   type: 'multiple' | 'boolean';
   answers: string[]; // shuffled, correct one hidden in here
 }
+
+export interface SessionData {
+  correctAnswers: string[];
+  questions: ClientQuestion[];
+  userAnswers: (string | null)[];
+  score: number;
+  total: number;
+  createdAt: number;
+}
