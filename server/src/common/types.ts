@@ -34,3 +34,19 @@ export interface SessionData {
   total: number;
   createdAt: number;
 }
+
+export interface QuizResultQuestion {
+  question: string;
+  category: string;
+  difficulty: string;
+  correct: boolean;
+  yourAnswer: string | null;
+  correctAnswer: string;
+}
+
+export interface QuizResult {
+  score: number;
+  total: number;
+  percentage: number;
+  questions: QuizResultQuestion[];
+}

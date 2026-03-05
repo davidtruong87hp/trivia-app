@@ -1,8 +1,13 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
-import { ClientQuestion, SessionData } from 'src/common/types';
+import { ClientQuestion, QuizResult, SessionData } from 'src/common/types';
 
 @Injectable()
 export class SessionService {
@@ -50,5 +55,84 @@ export class SessionService {
 
   async delete(sessionId: string): Promise<void> {
     await this.redis.del(this.key(sessionId));
+  }
+
+  async recordAnswer(
+    sessionId: string,
+    questionIndex: number,
+    answer: string,
+  ): Promise<{
+    correct: boolean;
+    correctAnswer: string;
+    session: SessionData;
+  }> {
+    const session = await this.get(sessionId);
+    const allAnswered = session.userAnswers.every((a) => a !== null);
+
+    if (allAnswered) {
+      throw new ForbiddenException('Quiz already completed');
+    }
+
+    // Don't allow re-answering - return existing result instead
+    if (session.userAnswers[questionIndex] !== null) {
+      return {
+        correct:
+          session.userAnswers[questionIndex] ===
+          session.correctAnswers[questionIndex],
+        correctAnswer: session.correctAnswers[questionIndex],
+        session,
+      };
+    }
+
+    const correctAnswer = session.correctAnswers[questionIndex];
+    const correct = answer === correctAnswer;
+
+    session.userAnswers[questionIndex] = answer;
+    session.score += correct ? 1 : 0;
+
+    // KEEPTTL preserves the original expiry
+    await this.redis.set(
+      this.key(sessionId),
+      JSON.stringify(session),
+      'KEEPTTL',
+    );
+
+    return {
+      correct,
+      correctAnswer,
+      session,
+    };
+  }
+
+  async getResult(sessionId: string): Promise<QuizResult> {
+    const session = await this.get(sessionId);
+
+    const unanswered = session.userAnswers.filter(
+      (answer) => answer === null,
+    ).length;
+
+    if (unanswered > 0) {
+      throw new ForbiddenException(
+        `Quiz not completed - ${unanswered} question(s) still unanswered`,
+      );
+    }
+
+    const result: QuizResult = {
+      score: session.score,
+      total: session.total,
+      percentage: Math.round((session.score / session.total) * 100),
+      questions: session.questions.map((q, index) => ({
+        question: q.question,
+        yourAnswer: session.userAnswers[index],
+        correctAnswer: session.correctAnswers[index],
+        correct: session.userAnswers[index] === session.correctAnswers[index],
+        difficulty: q.difficulty,
+        category: q.category,
+      })),
+    };
+
+    await this.delete(sessionId);
+
+    return result;
   }
 }

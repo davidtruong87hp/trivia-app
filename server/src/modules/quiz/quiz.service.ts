@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TriviaService } from '../trivia/trivia.service';
 import { StartQuizDto } from 'src/dto/start-quiz.dto';
 import { SessionService } from '../session/session.service';
+import { AnswerDto } from 'src/dto/answer.dto';
 
 @Injectable()
 export class QuizService {
@@ -36,5 +37,25 @@ export class QuizService {
     await this.sessionService.delete(sessionId);
 
     return { message: 'Session deleted' };
+  }
+
+  async submitAnswer(dto: AnswerDto) {
+    const { correct, correctAnswer, session } =
+      await this.sessionService.recordAnswer(
+        dto.sessionId,
+        dto.questionIndex,
+        dto.answer,
+      );
+
+    return {
+      correct,
+      correctAnswer,
+      score: session.score,
+      total: session.total,
+    };
+  }
+
+  async getResult(sessionId: string) {
+    return this.sessionService.getResult(sessionId);
   }
 }
