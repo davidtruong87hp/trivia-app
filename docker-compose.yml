@@ -1,18 +1,28 @@
 services:
   api:
-    build: ./server
+    build:
+      context: ./server
+      target: production
     ports:
       - 3000:3000
     env_file:
       - ./server/.env
     environment:
       - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
     depends_on:
       redis:
         condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - 80:80
     volumes:
-      - ./server:/app
-      - /app/node_modules # prevent host node_modules from overwriting container node_modules
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
     restart: unless-stopped
 
   redis:
@@ -21,7 +31,7 @@ services:
       - 6379:6379
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --bind 0.0.0.0 --protected-mode no
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
