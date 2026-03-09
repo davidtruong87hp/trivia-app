@@ -1,6 +1,7 @@
 import FadeInView from '@/components/ui/FadeInView'
 import PrimaryButton from '@/components/ui/PrimaryButton'
 import { Colors } from '@/constants/theme'
+import { useRouter } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import {
   Animated,
@@ -14,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Index() {
+  const router = useRouter()
   const glowAnim = useRef(new Animated.Value(0.4)).current
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function Index() {
         <FadeInView delay={400} style={styles.ctaContainer}>
           <PrimaryButton
             label='Start Quiz'
-            onPress={() => {}}
+            onPress={() => router.push('/category')}
             style={styles.ctaBtn}
           />
           <Text style={styles.ctaHint}>Pick a category to get started</Text>

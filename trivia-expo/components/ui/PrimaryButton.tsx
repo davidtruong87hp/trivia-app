@@ -2,9 +2,9 @@ import {
   Text,
   ViewStyle,
   Animated,
-  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  Pressable,
 } from 'react-native'
 import React, { useRef } from 'react'
 import { Colors } from '@/constants/theme'
@@ -41,12 +41,11 @@ const PrimaryButton = ({
   }
   return (
     <Animated.View style={[{ transform: [{ scale }] }, style]}>
-      <TouchableOpacity
+      <Pressable
         onPress={onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         disabled={disabled || loading}
-        activeOpacity={1}
         style={[styles.btn, (disabled || loading) && styles.btnDisabled]}
       >
         {loading ? (
@@ -54,7 +53,7 @@ const PrimaryButton = ({
         ) : (
           <Text style={styles.btnText}>{label}</Text>
         )}
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   )
 }
