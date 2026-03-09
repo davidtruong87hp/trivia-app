@@ -16,6 +16,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  app.enableCors({
+    origin: process.env.CLIENT_ORIGIN || '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  });
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`[NestJS] Running on http://localhost:${port}`);

@@ -17,19 +17,14 @@ import Chip from '@/components/ui/Chip'
 import type { Difficulty, QuestionType } from '@/types'
 import PrimaryButton from '@/components/ui/PrimaryButton'
 import { categoryEmoji, cleanCategoryName } from '@/utils/helpers'
+import { useCategories } from '@/hooks/useCategories'
 
 const NUMBER_OF_QUESTIONS = [5, 10, 15, 20]
 
 const CategoryScreen = () => {
   const router = useRouter()
 
-  const categories = [
-    { id: 9, name: 'General Knowledge' },
-    { id: 10, name: 'Entertainment: Books' },
-    { id: 11, name: 'Entertainment: Film' },
-    { id: 12, name: 'Entertainment: Music' },
-    { id: 13, name: 'Entertainment: Television' },
-  ]
+  const { categories, loading } = useCategories()
 
   const [amount, setAmount] = useState(10)
   const [selectedDifficulty, setSelectedDifficulty] =
@@ -50,11 +45,13 @@ const CategoryScreen = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <FadeInView style={styles.header}>
-          <Pressable style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backArrow}>←</Text>
-          </Pressable>
-          <Text style={styles.heading}>Set Up Your Quiz</Text>
+        <FadeInView>
+          <View style={styles.header}>
+            <Pressable style={styles.backBtn} onPress={() => router.back()}>
+              <Text style={styles.backArrow}>←</Text>
+            </Pressable>
+            <Text style={styles.heading}>Set Up Your Quiz</Text>
+          </View>
         </FadeInView>
 
         <FadeInView delay={60}>
@@ -111,57 +108,65 @@ const CategoryScreen = () => {
 
         <FadeInView delay={240}>
           <SectionLabel label='Category' />
-          <View style={styles.categoryGrid}>
-            <TouchableOpacity
-              style={[
-                styles.categoryCard,
-                selectedCategory === undefined && styles.categoryCardSelected,
-              ]}
-              onPress={() => setSelectedCategory(undefined)}
-            >
-              <Text style={styles.categoryIcon}>🎲</Text>
-              <Text
-                style={[
-                  styles.categoryName,
-                  selectedCategory === undefined && styles.categoryNameSelected,
-                ]}
-              >
-                Any
-              </Text>
-            </TouchableOpacity>
-            {categories.map((category) => (
+          {loading ? (
+            <Text style={styles.loadingText}>Loading categories...</Text>
+          ) : (
+            <View style={styles.categoryGrid}>
               <TouchableOpacity
-                key={category.id}
                 style={[
                   styles.categoryCard,
-                  selectedCategory === category.id &&
-                    styles.categoryCardSelected,
+                  selectedCategory === undefined && styles.categoryCardSelected,
                 ]}
-                onPress={() => setSelectedCategory(category.id)}
+                onPress={() => setSelectedCategory(undefined)}
               >
-                <Text style={styles.categoryIcon}>
-                  {categoryEmoji(category.name)}
-                </Text>
+                <Text style={styles.categoryIcon}>🎲</Text>
                 <Text
                   style={[
                     styles.categoryName,
-                    selectedCategory === category.id &&
+                    selectedCategory === undefined &&
                       styles.categoryNameSelected,
                   ]}
-                  numberOfLines={2}
                 >
-                  {cleanCategoryName(category.name)}
+                  Any
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryCard,
+                    selectedCategory === category.id &&
+                      styles.categoryCardSelected,
+                  ]}
+                  onPress={() => setSelectedCategory(category.id)}
+                >
+                  <Text style={styles.categoryIcon}>
+                    {categoryEmoji(category.name)}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.categoryName,
+                      selectedCategory === category.id &&
+                        styles.categoryNameSelected,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {cleanCategoryName(category.name)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </FadeInView>
 
-        <FadeInView delay={300} style={styles.startContainer}>
-          <PrimaryButton
-            label={`Start ${amount} Questions`}
-            onPress={handleStart}
-          />
+        <FadeInView delay={300}>
+          <View style={styles.startContainer}>
+            <PrimaryButton
+              label={loading ? 'Loading...' : `Start ${amount} Questions`}
+              disabled={loading}
+              onPress={handleStart}
+            />
+          </View>
         </FadeInView>
       </ScrollView>
     </SafeAreaView>
@@ -216,22 +221,26 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     color: Colors.textSecondary,
     textTransform: 'uppercase',
-    marginBottom: 12,
-    marginTop: 28,
+    marginBottom: 10,
+    marginTop: 20,
   },
   chipRow: {
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
   },
+  loadingText: {
+    color: Colors.textMuted,
+    fontSize: 14,
+  },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   categoryCard: {
     width: '30%',
-    aspectRatio: 1,
+    paddingVertical: 12,
     backgroundColor: Colors.bgCard,
     borderRadius: 12,
     borderWidth: 1,
@@ -246,7 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cyanGlow,
   },
   categoryIcon: {
-    fontSize: 24,
+    fontSize: 20,
   },
   categoryName: {
     fontSize: 11,
