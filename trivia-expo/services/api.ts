@@ -1,4 +1,4 @@
-import { Category } from '@/types'
+import { Category, QuizConfig, StartQuizResponse } from '@/types'
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -29,5 +29,12 @@ async function request<T>(
 export const QuizAPI = {
   categories(): Promise<{ categories: Category[] }> {
     return request<{ categories: Category[] }>('quiz/categories')
+  },
+
+  start(config: QuizConfig): Promise<StartQuizResponse> {
+    return request<StartQuizResponse>('quiz/start', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    })
   },
 }

@@ -18,13 +18,14 @@ import type { Difficulty, QuestionType } from '@/types'
 import PrimaryButton from '@/components/ui/PrimaryButton'
 import { categoryEmoji, cleanCategoryName } from '@/utils/helpers'
 import { useCategories } from '@/hooks/useCategories'
+import { useQuizSetup } from '@/hooks/useQuizSelectors'
 
 const NUMBER_OF_QUESTIONS = [5, 10, 15, 20]
 
 const CategoryScreen = () => {
   const router = useRouter()
-
   const { categories, loading } = useCategories()
+  const { startQuiz, isStarting } = useQuizSetup()
 
   const [amount, setAmount] = useState(10)
   const [selectedDifficulty, setSelectedDifficulty] =
@@ -32,7 +33,13 @@ const CategoryScreen = () => {
   const [selectedType, setSelectedType] = useState<QuestionType>(undefined)
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>()
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    await startQuiz({
+      amount,
+      category: selectedCategory,
+      difficulty: selectedDifficulty,
+      type: selectedType,
+    })
     router.push('/quiz')
   }
 
@@ -162,8 +169,9 @@ const CategoryScreen = () => {
         <FadeInView delay={300}>
           <View style={styles.startContainer}>
             <PrimaryButton
-              label={loading ? 'Loading...' : `Start ${amount} Questions`}
-              disabled={loading}
+              label={isStarting ? 'Loading...' : `Start ${amount} Questions`}
+              disabled={isStarting}
+              loading={isStarting}
               onPress={handleStart}
             />
           </View>
