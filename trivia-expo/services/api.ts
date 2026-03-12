@@ -1,4 +1,9 @@
-import { Category, QuizConfig, StartQuizResponse } from '@/types'
+import {
+  AnswerResponse,
+  Category,
+  QuizConfig,
+  StartQuizResponse,
+} from '@/types'
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -35,6 +40,17 @@ export const QuizAPI = {
     return request<StartQuizResponse>('quiz/start', {
       method: 'POST',
       body: JSON.stringify(config),
+    })
+  },
+
+  answer(
+    sessionId: string,
+    questionIndex: number,
+    answer: string,
+  ): Promise<AnswerResponse> {
+    return request<AnswerResponse>('quiz/answer', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, questionIndex, answer }),
     })
   },
 }

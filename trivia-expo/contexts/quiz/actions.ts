@@ -18,3 +18,27 @@ export function useStartQuiz(dispatch: Dispatch<Action>) {
     [dispatch],
   )
 }
+
+export function useSubmitAnswer(
+  dispatch: Dispatch<Action>,
+  sessionId: string | null,
+  currentQuestionIndex: number,
+) {
+  return useCallback(
+    async (answer: string) => {
+      if (!sessionId) return
+
+      try {
+        const result = await QuizAPI.answer(
+          sessionId,
+          currentQuestionIndex,
+          answer,
+        )
+        dispatch({ type: 'ANSWER_RECORDED', answer: result })
+      } catch (err: any) {
+        dispatch({ type: 'ERROR', message: err.message })
+      }
+    },
+    [dispatch, sessionId, currentQuestionIndex],
+  )
+}

@@ -27,3 +27,10 @@ export interface StartQuizResponse {
   total: number
   questions: ClientQuestion[]
 }
+
+export interface AnswerResponse {
+  correct: boolean
+  correctAnswer: string
+  score: number
+  total: number
+}

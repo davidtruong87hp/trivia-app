@@ -11,23 +11,18 @@ export function useQuizSetup() {
 
 export function useQuizGameplay() {
   const {
-    state: { phase, questions },
+    state: { phase, questions, lastAnswer },
     currentQuestion,
+    isLastQuestion,
+    submitAnswer,
   } = useQuiz()
-
-  const gameStatus = {
-    loading: phase === 'loading',
-    playing: phase === 'playing',
-    answered: phase === 'feedback',
-    error: phase === 'error',
-    idle: phase === 'idle',
-    finished: phase === 'finished',
-  }
 
   return {
     phase,
     currentQuestion,
     totalQuestions: questions.length,
-    gameStatus,
+    lastAnswer,
+    isLastQuestion,
+    submitAnswer,
   }
 }

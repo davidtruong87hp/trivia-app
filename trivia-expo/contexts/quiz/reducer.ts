@@ -14,6 +14,12 @@ export function quizReducer(state: QuizState, action: Action): QuizState {
         sessionId: action.sessionId,
         questions: action.questions,
       }
+    case 'ANSWER_RECORDED':
+      return {
+        ...state,
+        phase: 'feedback',
+        lastAnswer: action.answer,
+      }
     case 'ERROR':
       return {
         ...state,

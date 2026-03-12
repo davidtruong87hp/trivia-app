@@ -6,8 +6,9 @@ import {
   StyleSheet,
   ScrollView,
   Animated,
+  Pressable,
 } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors } from '@/constants/theme'
 import { useRouter } from 'expo-router'
@@ -16,17 +17,61 @@ import AnswerButton from '@/components/ui/AnswerButton'
 
 const QuizScreen = () => {
   const router = useRouter()
-  const { gameStatus, currentQuestion, totalQuestions } = useQuizGameplay()
+  const {
+    phase,
+    currentQuestion,
+    totalQuestions,
+    lastAnswer,
+    isLastQuestion,
+    submitAnswer,
+  } = useQuizGameplay()
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
 
-  const handleAnswer = (answer: string) => {
+  const submittingRef = useRef(false)
+  const feedbackAnim = useRef(new Animated.Value(0)).current
+  const questionAnim = useRef(new Animated.Value(1)).current
+
+  const isPlaying = phase === 'playing'
+  const isAnswered = phase === 'feedback'
+
+  useEffect(() => {
+    if (isAnswered) {
+      Animated.spring(feedbackAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start()
+    } else {
+      feedbackAnim.setValue(0)
+    }
+  }, [isAnswered])
+
+  const handleAnswer = async (answer: string) => {
+    if (!isPlaying || submittingRef.current) return
+
+    submittingRef.current = true
     setSelectedAnswer(answer)
 
-    // TODO: Submitting answer
+    await submitAnswer(answer)
+    submittingRef.current = false
   }
 
-  if (!currentQuestion || gameStatus.loading) {
+  const handleNext = () => {
+    Animated.timing(questionAnim, {
+      toValue: 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedAnswer(null)
+      Animated.timing(questionAnim, {
+        toValue: 1,
+        duration: 280,
+        useNativeDriver: true,
+      }).start()
+    })
+  }
+
+  if (!currentQuestion || phase === 'loading') {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingContainer}>
@@ -37,6 +82,11 @@ const QuizScreen = () => {
   }
 
   const { question, answers, index } = currentQuestion
+
+  const feedbackTranslateY = feedbackAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [60, 0],
+  })
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -54,6 +104,9 @@ const QuizScreen = () => {
             {index + 1} / {totalQuestions}
           </Text>
         </View>
+        <View style={styles.scoreChip}>
+          <Text style={styles.scoreText}>{lastAnswer?.score ?? 0}</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -61,7 +114,7 @@ const QuizScreen = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View>
+        <Animated.View style={{ opacity: questionAnim }}>
           <Text style={styles.questionText}>{question}</Text>
 
           <View style={styles.answersContainer}>
@@ -80,6 +133,45 @@ const QuizScreen = () => {
           </View>
         </Animated.View>
       </ScrollView>
+
+      {isAnswered && lastAnswer && (
+        <Animated.View
+          style={[
+            styles.feedbackBar,
+            {
+              backgroundColor: lastAnswer.correct
+                ? Colors.correctGlow
+                : Colors.wrongGlow,
+              borderTopColor: lastAnswer.correct
+                ? Colors.correct
+                : Colors.wrong,
+              opacity: feedbackAnim,
+              transform: [{ translateY: feedbackTranslateY }],
+            },
+          ]}
+        >
+          <View>
+            <Text
+              style={[
+                styles.feedbackTitle,
+                { color: lastAnswer.correct ? Colors.correct : Colors.wrong },
+              ]}
+            >
+              {lastAnswer.correct ? '✓ Correct!' : '✗ Wrong'}
+            </Text>
+            {!lastAnswer.correct && (
+              <Text style={styles.feedbackAnswer}>
+                Answer: {lastAnswer.correctAnswer}
+              </Text>
+            )}
+          </View>
+          <Pressable style={styles.nextBtn} onPress={handleNext}>
+            <Text style={styles.nextBtnText}>
+              {isLastQuestion ? 'Results →' : 'Next →'}
+            </Text>
+          </Pressable>
+        </Animated.View>
+      )}
     </SafeAreaView>
   )
 }
@@ -129,6 +221,21 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'right',
   },
+  scoreChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.bgCard,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  scoreText: {
+    color: Colors.cyan,
+    fontWeight: '800',
+    fontSize: 15,
+  },
   scroll: {
     flex: 1,
   },
@@ -147,6 +254,35 @@ const styles = StyleSheet.create({
   },
   answersContainer: {
     gap: 32,
+  },
+  feedbackBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 2,
+  },
+  feedbackTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  feedbackAnswer: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  nextBtn: {
+    backgroundColor: Colors.cyan,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  nextBtnText: {
+    color: Colors.bg,
+    fontWeight: '700',
+    fontSize: 14,
   },
 })
 
