@@ -13,10 +13,11 @@ import { Colors, Difficulty as DifficultyColors } from '@/constants/theme'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import FadeInView from '@/components/ui/FadeInView'
 import Badge from '@/components/ui/Badge'
+import ScoreRing from '@/components/ui/ScoreRing'
 
 const ResultsScreen = () => {
   const router = useRouter()
-  const { result, resetQuiz } = useQuizResult()
+  const { result, bestStreak, resetQuiz } = useQuizResult()
 
   useEffect(() => {
     if (!result) return
@@ -50,12 +51,25 @@ const ResultsScreen = () => {
         <FadeInView>
           <View style={styles.heroSection}>
             <Text style={styles.heroTitle}>Quiz Complete</Text>
+            <ScoreRing percentage={percentage} score={score} total={total} />
             <Text style={[styles.gradeLabel, { color: grade.color }]}>
               {grade.label}
             </Text>
             <Text style={styles.gradeSubtitle}>
               You got {score} out of {total} questions correct
             </Text>
+
+            {bestStreak >= 2 && (
+              <View style={styles.streakRow}>
+                <Text style={styles.streakIcon}>
+                  {bestStreak >= 5 ? '🔥' : '⚡'}
+                </Text>
+                <Text style={styles.streakStat}>
+                  Best streak:{' '}
+                  <Text style={styles.streakValue}>{bestStreak}x</Text>
+                </Text>
+              </View>
+            )}
           </View>
         </FadeInView>
 
@@ -190,6 +204,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 179, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 179, 0, 0.3)',
+  },
+  streakIcon: {
+    fontSize: 16,
+  },
+  streakStat: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  streakValue: {
+    fontWeight: '800',
+    color: '#FFB300',
   },
   actionsRow: {
     flexDirection: 'row',

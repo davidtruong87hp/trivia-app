@@ -14,12 +14,20 @@ export function quizReducer(state: QuizState, action: Action): QuizState {
         sessionId: action.sessionId,
         questions: action.questions,
       }
-    case 'ANSWER_RECORDED':
+    case 'ANSWER_RECORDED': {
+      const correct = action.answer.correct
+      const newStreak = correct ? state.streak + 1 : 0
+      const newBest = Math.max(newStreak, state.bestStreak)
+
       return {
         ...state,
         phase: 'feedback',
         lastAnswer: action.answer,
+        streak: newStreak,
+        bestStreak: newBest,
       }
+    }
+
     case 'NEXT_QUESTION': {
       const nextIndex = state.currentIndex + 1
       const isLast = nextIndex >= state.questions.length

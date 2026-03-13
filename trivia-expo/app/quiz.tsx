@@ -15,11 +15,15 @@ import { useRouter } from 'expo-router'
 import { useQuizGameplay } from '@/hooks/useQuizSelectors'
 import AnswerButton from '@/components/ui/AnswerButton'
 import Badge from '@/components/ui/Badge'
+import ProgressBar from '@/components/ui/ProgressBar'
+import StreakBadge from '@/components/ui/StreakBadge'
 
 const QuizScreen = () => {
   const router = useRouter()
   const {
     phase,
+    streak,
+    currentIndex,
     currentQuestion,
     totalQuestions,
     lastAnswer,
@@ -37,6 +41,12 @@ const QuizScreen = () => {
 
   const isPlaying = phase === 'playing'
   const isAnswered = phase === 'feedback'
+
+  useEffect(() => {
+    if (isPlaying) {
+      submittingRef.current = false
+    }
+  }, [isPlaying, currentIndex])
 
   useEffect(() => {
     if (phase === 'idle' || phase === 'error') {
@@ -118,10 +128,12 @@ const QuizScreen = () => {
           <Text style={styles.exitText}>✕</Text>
         </TouchableOpacity>
         <View style={styles.progressContainer}>
+          <ProgressBar current={index} total={totalQuestions} />
           <Text style={styles.progressLabel}>
             {index + 1} / {totalQuestions}
           </Text>
         </View>
+        <StreakBadge streak={streak} />
         <View style={styles.scoreChip}>
           <Text style={styles.scoreText}>{lastAnswer?.score ?? 0}</Text>
         </View>
@@ -189,6 +201,11 @@ const QuizScreen = () => {
             {!lastAnswer.correct && (
               <Text style={styles.feedbackAnswer}>
                 Answer: {lastAnswer.correctAnswer}
+              </Text>
+            )}
+            {lastAnswer.correct && streak >= 3 && (
+              <Text style={styles.streakMessage}>
+                {streak >= 5 ? '🔥 On fire! ' : '⚡ '}
               </Text>
             )}
           </View>
@@ -314,6 +331,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  streakMessage: {
+    fontSize: 13,
+    color: '#FFB300',
+    marginTop: 2,
+    fontWeight: '600',
   },
   nextBtn: {
     backgroundColor: Colors.cyan,

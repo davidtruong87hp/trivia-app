@@ -16,6 +16,8 @@ export interface QuizState {
   error: string | null
   lastAnswer: AnswerResponse | null
   result: QuizResult | null
+  streak: number
+  bestStreak: number
 }
 
 export type Action =
@@ -45,4 +47,6 @@ export const initialState: QuizState = {
   error: null,
   lastAnswer: null,
   result: null,
+  streak: 0,
+  bestStreak: 0,
 }
