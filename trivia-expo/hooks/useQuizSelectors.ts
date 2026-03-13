@@ -15,6 +15,8 @@ export function useQuizGameplay() {
     currentQuestion,
     isLastQuestion,
     submitAnswer,
+    nextQuestion,
+    resetQuiz,
   } = useQuiz()
 
   return {
@@ -24,5 +26,16 @@ export function useQuizGameplay() {
     lastAnswer,
     isLastQuestion,
     submitAnswer,
+    nextQuestion,
+    resetQuiz,
   }
+}
+
+export function useQuizResult() {
+  const {
+    state: { result },
+    resetQuiz,
+  } = useQuiz()
+
+  return { result, resetQuiz }
 }

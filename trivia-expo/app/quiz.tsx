@@ -10,10 +10,11 @@ import {
 } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Colors } from '@/constants/theme'
+import { Colors, Difficulty as DifficultyColors } from '@/constants/theme'
 import { useRouter } from 'expo-router'
 import { useQuizGameplay } from '@/hooks/useQuizSelectors'
 import AnswerButton from '@/components/ui/AnswerButton'
+import Badge from '@/components/ui/Badge'
 
 const QuizScreen = () => {
   const router = useRouter()
@@ -24,6 +25,8 @@ const QuizScreen = () => {
     lastAnswer,
     isLastQuestion,
     submitAnswer,
+    nextQuestion,
+    resetQuiz,
   } = useQuizGameplay()
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
@@ -36,6 +39,16 @@ const QuizScreen = () => {
   const isAnswered = phase === 'feedback'
 
   useEffect(() => {
+    if (phase === 'idle' || phase === 'error') {
+      router.replace('/')
+    }
+
+    if (phase === 'finished') {
+      router.replace('/results')
+    }
+  }, [phase, router])
+
+  useEffect(() => {
     if (isAnswered) {
       Animated.spring(feedbackAnim, {
         toValue: 1,
@@ -44,7 +57,7 @@ const QuizScreen = () => {
     } else {
       feedbackAnim.setValue(0)
     }
-  }, [isAnswered])
+  }, [isAnswered, feedbackAnim])
 
   const handleAnswer = async (answer: string) => {
     if (!isPlaying || submittingRef.current) return
@@ -61,8 +74,9 @@ const QuizScreen = () => {
       toValue: 0,
       duration: 180,
       useNativeDriver: true,
-    }).start(() => {
+    }).start(async () => {
       setSelectedAnswer(null)
+      await nextQuestion()
       Animated.timing(questionAnim, {
         toValue: 1,
         duration: 280,
@@ -81,7 +95,8 @@ const QuizScreen = () => {
     )
   }
 
-  const { question, answers, index } = currentQuestion
+  const { question, answers, index, category, difficulty } = currentQuestion
+  const diffConfig = DifficultyColors[difficulty]
 
   const feedbackTranslateY = feedbackAnim.interpolate({
     inputRange: [0, 1],
@@ -94,7 +109,10 @@ const QuizScreen = () => {
 
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace('/')}
+          onPress={() => {
+            resetQuiz()
+            router.replace('/')
+          }}
           style={styles.exitBtn}
         >
           <Text style={styles.exitText}>✕</Text>
@@ -115,6 +133,15 @@ const QuizScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={{ opacity: questionAnim }}>
+          <View style={styles.metaRow}>
+            <View style={styles.metaRight}>
+              <Badge label={difficulty} color={diffConfig.color} />
+              <Text numberOfLines={1} style={styles.categoryText}>
+                {category}
+              </Text>
+            </View>
+          </View>
+
           <Text style={styles.questionText}>{question}</Text>
 
           <View style={styles.answersContainer}>
@@ -243,6 +270,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 24,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 20,
+  },
+  metaRight: {
+    flex: 1,
+    gap: 6,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
   },
   questionText: {
     fontSize: 22,

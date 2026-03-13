@@ -1,4 +1,4 @@
-import { AnswerResponse, ClientQuestion, QuizConfig } from '@/types'
+import { AnswerResponse, ClientQuestion, QuizConfig, QuizResult } from '@/types'
 
 export type QuizPhase =
   | 'idle'
@@ -15,6 +15,7 @@ export interface QuizState {
   currentIndex: number
   error: string | null
   lastAnswer: AnswerResponse | null
+  result: QuizResult | null
 }
 
 export type Action =
@@ -22,11 +23,16 @@ export type Action =
   | { type: 'QUIZ_STARTED'; sessionId: string; questions: ClientQuestion[] }
   | { type: 'ERROR'; message: string }
   | { type: 'ANSWER_RECORDED'; answer: AnswerResponse }
+  | { type: 'NEXT_QUESTION' }
+  | { type: 'RESULT_LOADED'; result: QuizResult }
+  | { type: 'RESET' }
 
 export interface QuizContextValue {
   state: QuizState
   startQuiz: (config: QuizConfig) => Promise<void>
   submitAnswer: (answer: string) => Promise<void>
+  nextQuestion: () => Promise<void>
+  resetQuiz: () => void
   currentQuestion: ClientQuestion | null
   isLastQuestion: boolean
 }
@@ -38,4 +44,5 @@ export const initialState: QuizState = {
   currentIndex: 0,
   error: null,
   lastAnswer: null,
+  result: null,
 }

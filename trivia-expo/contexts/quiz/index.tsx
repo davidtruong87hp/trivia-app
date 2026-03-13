@@ -1,7 +1,12 @@
 import { createContext, useContext, useMemo, useReducer } from 'react'
 import { initialState, QuizContextValue } from './types'
 import { quizReducer } from './reducer'
-import { useStartQuiz, useSubmitAnswer } from './actions'
+import {
+  useNextQuestion,
+  useResetQuiz,
+  useStartQuiz,
+  useSubmitAnswer,
+} from './actions'
 
 const QuizContext = createContext<QuizContextValue | null>(null)
 QuizContext.displayName = 'QuizContext'
@@ -18,16 +23,32 @@ export function QuizProvider({ children }: { children: React.ReactNode }) {
     state.sessionId,
     currentQuestion?.index ?? 0,
   )
+  const nextQuestion = useNextQuestion(
+    dispatch,
+    isLastQuestion,
+    state.sessionId,
+  )
+  const resetQuiz = useResetQuiz(dispatch, state.sessionId)
 
   const value = useMemo<QuizContextValue>(
     () => ({
       state,
       startQuiz,
       submitAnswer,
+      nextQuestion,
+      resetQuiz,
       currentQuestion,
       isLastQuestion,
     }),
-    [state, startQuiz, submitAnswer, currentQuestion, isLastQuestion],
+    [
+      state,
+      startQuiz,
+      submitAnswer,
+      nextQuestion,
+      resetQuiz,
+      currentQuestion,
+      isLastQuestion,
+    ],
   )
 
   return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>

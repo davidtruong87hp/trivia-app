@@ -20,12 +20,31 @@ export function quizReducer(state: QuizState, action: Action): QuizState {
         phase: 'feedback',
         lastAnswer: action.answer,
       }
+    case 'NEXT_QUESTION': {
+      const nextIndex = state.currentIndex + 1
+      const isLast = nextIndex >= state.questions.length
+
+      return {
+        ...state,
+        phase: isLast ? 'loading' : 'playing',
+        currentIndex: isLast ? state.currentIndex : nextIndex,
+        lastAnswer: null,
+      }
+    }
+    case 'RESULT_LOADED':
+      return {
+        ...state,
+        phase: 'finished',
+        result: action.result,
+      }
     case 'ERROR':
       return {
         ...state,
         phase: 'error',
         error: action.message,
       }
+    case 'RESET':
+      return initialState
     default:
       return state
   }

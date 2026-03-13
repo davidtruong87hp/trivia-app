@@ -2,6 +2,7 @@ import {
   AnswerResponse,
   Category,
   QuizConfig,
+  QuizResult,
   StartQuizResponse,
 } from '@/types'
 
@@ -51,6 +52,16 @@ export const QuizAPI = {
     return request<AnswerResponse>('quiz/answer', {
       method: 'POST',
       body: JSON.stringify({ sessionId, questionIndex, answer }),
+    })
+  },
+
+  result(sessionId: string): Promise<QuizResult> {
+    return request<QuizResult>(`quiz/result/${sessionId}`)
+  },
+
+  deleteSession(sessionId: string): Promise<void> {
+    return request<void>(`quiz/delete/${sessionId}`, {
+      method: 'DELETE',
     })
   },
 }

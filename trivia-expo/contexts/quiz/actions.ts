@@ -42,3 +42,34 @@ export function useSubmitAnswer(
     [dispatch, sessionId, currentQuestionIndex],
   )
 }
+
+export function useNextQuestion(
+  dispatch: Dispatch<Action>,
+  isLastQuestion: boolean,
+  sessionId: string | null,
+) {
+  return useCallback(async () => {
+    dispatch({ type: 'NEXT_QUESTION' })
+
+    if (isLastQuestion && sessionId) {
+      try {
+        const result = await QuizAPI.result(sessionId)
+        dispatch({ type: 'RESULT_LOADED', result })
+      } catch (err: any) {
+        dispatch({ type: 'ERROR', message: err.message })
+      }
+    }
+  }, [dispatch, isLastQuestion, sessionId])
+}
+
+export function useResetQuiz(
+  dispatch: Dispatch<Action>,
+  sessionId: string | null,
+) {
+  return useCallback(() => {
+    if (sessionId) {
+      QuizAPI.deleteSession(sessionId).catch(() => {})
+    }
+    dispatch({ type: 'RESET' })
+  }, [dispatch, sessionId])
+}
