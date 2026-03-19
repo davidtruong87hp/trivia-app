@@ -8,7 +8,7 @@ import {
   Animated,
   Pressable,
 } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors, Difficulty as DifficultyColors } from '@/constants/theme'
 import { useRouter } from 'expo-router'
@@ -17,6 +17,10 @@ import AnswerButton from '@/components/ui/AnswerButton'
 import Badge from '@/components/ui/Badge'
 import ProgressBar from '@/components/ui/ProgressBar'
 import StreakBadge from '@/components/ui/StreakBadge'
+import { useTimer } from '@/hooks/useTimer'
+import TimerRing from '@/components/ui/TimerRing'
+
+const QUESTION_TIME = 20
 
 const QuizScreen = () => {
   const router = useRouter()
@@ -28,6 +32,8 @@ const QuizScreen = () => {
     totalQuestions,
     lastAnswer,
     isLastQuestion,
+    timedOut,
+    error,
     submitAnswer,
     nextQuestion,
     resetQuiz,
@@ -41,12 +47,42 @@ const QuizScreen = () => {
 
   const isPlaying = phase === 'playing'
   const isAnswered = phase === 'feedback'
+  const isPlayingRef = useRef(isPlaying)
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
+
+  const handleTimerExpire = useCallback(async () => {
+    if (!isPlayingRef.current || submittingRef.current) {
+      console.log('❌ bailed out early')
+      return
+    }
+
+    submittingRef.current = true
+    setSelectedAnswer('__timed_out__')
+    await submitAnswer('__timed_out__', true)
+    submittingRef.current = false
+  }, [submitAnswer])
+
+  const {
+    timeLeft,
+    percentage: timePct,
+    color: timerColor,
+    reset: resetTimer,
+    stop: stopTimer,
+  } = useTimer({
+    duration: QUESTION_TIME,
+    onExpire: handleTimerExpire,
+    enabled: isPlaying,
+  })
 
   useEffect(() => {
     if (isPlaying) {
       submittingRef.current = false
+      resetTimer()
     }
-  }, [isPlaying, currentIndex])
+  }, [currentIndex])
 
   useEffect(() => {
     if (phase === 'idle' || phase === 'error') {
@@ -60,6 +96,7 @@ const QuizScreen = () => {
 
   useEffect(() => {
     if (isAnswered) {
+      stopTimer()
       Animated.spring(feedbackAnim, {
         toValue: 1,
         useNativeDriver: true,
@@ -67,7 +104,7 @@ const QuizScreen = () => {
     } else {
       feedbackAnim.setValue(0)
     }
-  }, [isAnswered, feedbackAnim])
+  }, [isAnswered])
 
   const handleAnswer = async (answer: string) => {
     if (!isPlaying || submittingRef.current) return
@@ -146,6 +183,12 @@ const QuizScreen = () => {
       >
         <Animated.View style={{ opacity: questionAnim }}>
           <View style={styles.metaRow}>
+            <TimerRing
+              timeLeft={timeLeft}
+              percentage={isAnswered ? 0 : timePct}
+              color={isAnswered ? Colors.textMuted : timerColor}
+            />
+
             <View style={styles.metaRight}>
               <Badge label={difficulty} color={diffConfig.color} />
               <Text numberOfLines={1} style={styles.categoryText}>
@@ -196,7 +239,11 @@ const QuizScreen = () => {
                 { color: lastAnswer.correct ? Colors.correct : Colors.wrong },
               ]}
             >
-              {lastAnswer.correct ? '✓ Correct!' : '✗ Wrong'}
+              {timedOut
+                ? "⏱ Time's Up!"
+                : lastAnswer.correct
+                  ? '✓ Correct!'
+                  : '✗ Wrong'}
             </Text>
             {!lastAnswer.correct && (
               <Text style={styles.feedbackAnswer}>

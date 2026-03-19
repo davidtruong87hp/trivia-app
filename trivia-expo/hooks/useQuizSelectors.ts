@@ -11,7 +11,16 @@ export function useQuizSetup() {
 
 export function useQuizGameplay() {
   const {
-    state: { phase, questions, lastAnswer, currentIndex, streak, bestStreak },
+    state: {
+      phase,
+      questions,
+      lastAnswer,
+      currentIndex,
+      streak,
+      bestStreak,
+      timedOut,
+      error,
+    },
     currentQuestion,
     isLastQuestion,
     submitAnswer,
@@ -28,6 +37,8 @@ export function useQuizGameplay() {
     totalQuestions: questions.length,
     lastAnswer,
     isLastQuestion,
+    timedOut,
+    error,
     submitAnswer,
     nextQuestion,
     resetQuiz,

@@ -25,6 +25,7 @@ export function quizReducer(state: QuizState, action: Action): QuizState {
         lastAnswer: action.answer,
         streak: newStreak,
         bestStreak: newBest,
+        timedOut: action.timedOut ?? false,
       }
     }
 
@@ -37,6 +38,7 @@ export function quizReducer(state: QuizState, action: Action): QuizState {
         phase: isLast ? 'loading' : 'playing',
         currentIndex: isLast ? state.currentIndex : nextIndex,
         lastAnswer: null,
+        timedOut: false,
       }
     }
     case 'RESULT_LOADED':

@@ -25,7 +25,7 @@ export function useSubmitAnswer(
   currentQuestionIndex: number,
 ) {
   return useCallback(
-    async (answer: string) => {
+    async (answer: string, timedOut = false) => {
       if (!sessionId) return
 
       try {
@@ -34,7 +34,7 @@ export function useSubmitAnswer(
           currentQuestionIndex,
           answer,
         )
-        dispatch({ type: 'ANSWER_RECORDED', answer: result })
+        dispatch({ type: 'ANSWER_RECORDED', answer: result, timedOut })
       } catch (err: any) {
         dispatch({ type: 'ERROR', message: err.message })
       }

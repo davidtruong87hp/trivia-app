@@ -18,13 +18,14 @@ export interface QuizState {
   result: QuizResult | null
   streak: number
   bestStreak: number
+  timedOut: boolean
 }
 
 export type Action =
   | { type: 'LOADING' }
   | { type: 'QUIZ_STARTED'; sessionId: string; questions: ClientQuestion[] }
   | { type: 'ERROR'; message: string }
-  | { type: 'ANSWER_RECORDED'; answer: AnswerResponse }
+  | { type: 'ANSWER_RECORDED'; answer: AnswerResponse; timedOut?: boolean }
   | { type: 'NEXT_QUESTION' }
   | { type: 'RESULT_LOADED'; result: QuizResult }
   | { type: 'RESET' }
@@ -32,7 +33,7 @@ export type Action =
 export interface QuizContextValue {
   state: QuizState
   startQuiz: (config: QuizConfig) => Promise<void>
-  submitAnswer: (answer: string) => Promise<void>
+  submitAnswer: (answer: string, timedOut?: boolean) => Promise<void>
   nextQuestion: () => Promise<void>
   resetQuiz: () => void
   currentQuestion: ClientQuestion | null
@@ -49,4 +50,5 @@ export const initialState: QuizState = {
   result: null,
   streak: 0,
   bestStreak: 0,
+  timedOut: false,
 }
